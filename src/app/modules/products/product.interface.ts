@@ -5,5 +5,5 @@ export type IProduct = {
   name: string;
   description: string;
   price: number;
-  order:Order[]
+  order?:Order[]
 };
