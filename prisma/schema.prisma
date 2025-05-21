@@ -1,113 +1,155 @@
 // datasource and generator setup
-datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
-}
+// datasource db {
+//   provider = "mongodb"
+//   url      = env("DATABASE_URL")
+// }
 
-generator client {
-  provider = "prisma-client-js"
-}
+// generator client {
+//   provider = "prisma-client-js"
+// }
 
 // ---------------------------------------------------------
 //  ENUMS
 // ---------------------------------------------------------
 
-enum UserRole {
-  STUDENT
-  BROKER
-  PARTNER
-  ADMIN
-  SUPER_ADMIN
-}
+// enum UserRole {
+//   STUDENT
+//   BROKER
+//   PARTNER
+//   ADMIN
+//   SUPER_ADMIN
+// }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-}
+// enum UserStatus {
+//   ACTIVE
+//   INACTIVE
+// }
 
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
 
-model User {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  firstName    String
-  lastName     String?
-  phoneNumber  String?
-  email        String     @unique
-  password     String
-  role         UserRole   @default(STUDENT)
-  status       UserStatus @default(ACTIVE)
-  profileImage String?
+// model User {
+//   id           String     @id @default(auto()) @map("_id") @db.ObjectId
+//   firstName    String
+//   lastName     String?
+//   phoneNumber  String?
+//   email        String     @unique
+//   password     String
+//   role         UserRole   @default(STUDENT)
+//   status       UserStatus @default(ACTIVE)
+//   profileImage String?
 
-  otp       String?
-  otpExpiry DateTime?
+//   otp       String?
+//   otpExpiry DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  brokers   Broker?
-  partners  Partner?
-  students  Student?
-  admins    Admin?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   brokers   Broker?
+//   partners  Partner?
+//   students  Student?
+//   admins    Admin?
 
-  @@map("users")
+//   @@map("users")
+// }
+
+// model Broker {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+
+//   email String @unique
+//   user  User   @relation(fields: [email], references: [email])
+
+//   agency        String?
+//   licenseNumber String?
+//   webHostedUrl  String?
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("brokers")
+// }
+
+// model Partner {
+//   id    String @id @default(auto()) @map("_id") @db.ObjectId
+//   email String @unique
+//   user  User   @relation(fields: [email], references: [email])
+
+//   companyName    String?
+//   companyAddress String?
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("partners")
+// }
+
+// model Student {
+//   id        String @id @default(auto()) @map("_id") @db.ObjectId
+//   studentId String @unique
+
+//   email String @unique
+//   user  User   @relation(fields: [email], references: [email])
+
+//   discordUsername String?
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("students")
+// }
+
+// model Admin {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+
+//   email String @unique
+//   user  User   @relation(fields: [email], references: [email])
+
+//   adminId String @unique
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("admins")
+// }
+
+
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
 }
 
-model Broker {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  email String @unique
-  user  User   @relation(fields: [email], references: [email])
-
-  agency        String?
-  licenseNumber String?
-  webHostedUrl  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("brokers")
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL") // Example: mongodb+srv://...
 }
 
-model Partner {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  email String @unique
-  user  User   @relation(fields: [email], references: [email])
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Int       // stored in cents
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  companyName    String?
-  companyAddress String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("partners")
+  orders      Order[]
 }
 
-model Student {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  studentId String @unique
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String @unique
+  product     Product  @relation(fields: [productId], references: [id])
+  amount      Int      // price at purchase time
+  createdAt   DateTime @default(now())
 
-  email String @unique
-  user  User   @relation(fields: [email], references: [email])
-
-  discordUsername String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("students")
+  payment     Payment?
 }
 
-model Admin {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  email String @unique
-  user  User   @relation(fields: [email], references: [email])
-
-  adminId String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("admins")
+model Payment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String @unique
+  stripeId  String   // Stripe PaymentIntent or Checkout ID
+  status    String
+  paidAt    DateTime
 }
